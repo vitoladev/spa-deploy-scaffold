@@ -1,0 +1,48 @@
+# Outputs for {{projectName}} Terraform configuration
+
+output "s3_bucket_name" {
+  description = "Name of the S3 bucket"
+  value       = aws_s3_bucket.spa_bucket.id
+}
+
+output "s3_bucket_arn" {
+  description = "ARN of the S3 bucket"
+  value       = aws_s3_bucket.spa_bucket.arn
+}
+
+output "s3_bucket_regional_domain_name" {
+  description = "Regional domain name of the S3 bucket"
+  value       = aws_s3_bucket.spa_bucket.bucket_regional_domain_name
+}
+
+output "cloudfront_distribution_id" {
+  description = "ID of the CloudFront distribution"
+  value       = aws_cloudfront_distribution.spa_distribution.id
+}
+
+output "cloudfront_domain_name" {
+  description = "Domain name of the CloudFront distribution"
+  value       = aws_cloudfront_distribution.spa_distribution.domain_name
+}
+
+output "cloudfront_hosted_zone_id" {
+  description = "CloudFront Route 53 zone ID"
+  value       = aws_cloudfront_distribution.spa_distribution.hosted_zone_id
+}
+
+{{#if domainName}}
+output "custom_domain_name" {
+  description = "Custom domain name configured for the distribution"
+  value       = var.domain_name
+}
+{{/if}}
+
+output "deployment_command" {
+  description = "Command to deploy built files to S3"
+  value       = "aws s3 sync ./{{outputDirectory}} s3://${aws_s3_bucket.spa_bucket.id}/ --delete"
+}
+
+output "cache_invalidation_command" {
+  description = "Command to invalidate CloudFront cache"
+  value       = "aws cloudfront create-invalidation --distribution-id ${aws_cloudfront_distribution.spa_distribution.id} --paths '/*'"
+}

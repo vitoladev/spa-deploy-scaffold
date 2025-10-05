@@ -1,0 +1,38 @@
+# Variables for {{projectName}} Terraform configuration
+
+variable "environment" {
+  description = "Environment name (e.g., production, staging, development)"
+  type        = string
+  default     = "{{environment}}"
+}
+
+variable "aws_region" {
+  description = "AWS region for resources"
+  type        = string
+  default     = "{{awsRegion}}"
+}
+
+variable "price_class" {
+  description = "CloudFront distribution price class"
+  type        = string
+  default     = "{{priceClass}}"
+  
+  validation {
+    condition     = contains(["PriceClass_100", "PriceClass_200", "PriceClass_All"], var.price_class)
+    error_message = "Price class must be PriceClass_100, PriceClass_200, or PriceClass_All"
+  }
+}
+
+{{#if domainName}}
+variable "domain_name" {
+  description = "Custom domain name for the CloudFront distribution"
+  type        = string
+  default     = "{{domainName}}"
+}
+
+variable "acm_certificate_arn" {
+  description = "ARN of the ACM certificate for the custom domain"
+  type        = string
+  default     = "{{certificateArn}}"
+}
+{{/if}}
