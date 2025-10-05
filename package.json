@@ -1,0 +1,74 @@
+{
+  "name": "static-spa-deploy-scaffold",
+  "version": "1.0.0",
+  "description": "Generate Terraform code for AWS CloudFront + S3 deployments based on build tool detection",
+  "type": "module",
+  "bin": {
+    "spa-deploy-scaffold": "./dist/cli.js"
+  },
+  "exports": {
+    "./detectors/*": "./dist/detectors/*.js",
+    "./generators/*": "./dist/generators/*.js",
+    "./utils/*": "./dist/utils/*.js",
+    "./errors": "./dist/errors/scaffold-errors.js",
+    "./types/*": "./dist/types/*.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "terraform",
+    "aws",
+    "cloudfront",
+    "s3",
+    "vite",
+    "rollup",
+    "esbuild",
+    "cli",
+    "spa",
+    "deployment"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@inquirer/prompts": "^7.8.6",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.1",
+    "fs-extra": "^11.3.2",
+    "handlebars": "^4.7.8",
+    "ora": "^9.0.0",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "@types/fs-extra": "^11.0.4",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.10.7",
+    "@typescript-eslint/eslint-plugin": "^8.26.0",
+    "@typescript-eslint/parser": "^8.26.0",
+    "eslint": "^9.20.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-import-resolver-typescript": "^3.7.1",
+    "eslint-plugin-import": "^2.31.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.5.0",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@10.18.0"
+}
