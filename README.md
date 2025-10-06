@@ -29,9 +29,9 @@ The tool automatically detects your build tool from `package.json` dependencies 
 ### Local Development Setup
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd static-spa-deploy-scaffold
+# Clone the repository (SSH)
+git clone git@github.com:vitoladev/spa-deploy-scaffold.git
+cd spa-deploy-scaffold
 
 # Enable Corepack (for pnpm)
 corepack enable
@@ -67,7 +67,7 @@ Navigate to your SPA project and run:
 spa-deploy-scaffold generate
 
 # Or run directly from the tool's directory
-node /path/to/static-spa-deploy-scaffold/dist/cli.js generate
+node /path/to/spa-deploy-scaffold/dist/cli.js generate
 
 # Non-interactive mode
 spa-deploy-scaffold generate --yes
@@ -300,9 +300,9 @@ To use a custom domain:
 Want to contribute or modify the tool?
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd static-spa-deploy-scaffold
+# Clone the repository (SSH)
+git clone git@github.com:vitoladev/spa-deploy-scaffold.git
+cd spa-deploy-scaffold
 
 # Enable Corepack (for pnpm)
 corepack enable
