@@ -30,6 +30,7 @@ export async function generateTerraformFiles(
     generateFile('main.tf.hbs', 'main.tf', templateData, options.outputDir, templatesDir),
     generateFile('variables.tf.hbs', 'variables.tf', templateData, options.outputDir, templatesDir),
     generateFile('outputs.tf.hbs', 'outputs.tf', templateData, options.outputDir, templatesDir),
+    generateFile('terraform.tfvars.hbs', 'terraform.tfvars', templateData, options.outputDir, templatesDir),
     generateReadme(templateData, options.outputDir),
     
     // CloudFront + S3 Module files
@@ -123,7 +124,52 @@ This modular design allows for easy expansion in the future, such as:
   - CloudFront distributions
   - IAM policies
 
+## ⚠️ Important: Terraform State Management
+
+**This initial configuration uses local state storage**, which is fine for getting started and testing. However, for production use or team collaboration, you should migrate to a remote backend like S3.
+
+### Why use a remote backend?
+
+- **Team collaboration**: Multiple team members can work on the same infrastructure
+- **State locking**: Prevents concurrent modifications that could corrupt your state
+- **Backup and versioning**: Your state file is safely stored and versioned
+- **Security**: Sensitive data in state files is better protected
+
+### Recommended: Upgrade to S3 backend
+
+After your initial setup, add this to your \`main.tf\`:
+
+\`\`\`hcl
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state-bucket"
+    key            = "${data.projectName}/terraform.tfstate"
+    region         = "${data.awsRegion}"
+    encrypt        = true
+    dynamodb_table = "terraform-state-lock"
+  }
+}
+\`\`\`
+
+Then run:
+\`\`\`bash
+terraform init -migrate-state
+\`\`\`
+
+See [Terraform Backend Documentation](https://developer.hashicorp.com/terraform/language/settings/backends/s3) for detailed setup instructions.
+
 ## Usage
+
+### Configure Variables (Optional)
+
+Review and customize the \`terraform.tfvars\` file with your settings:
+- AWS region
+- Environment name
+- CloudFront price class
+- Custom domain settings (if applicable)
+
+This file has been pre-populated with your configuration, but you can modify any values as needed.
+Terraform will automatically load this file when you run \`plan\` or \`apply\`.
 
 ### Initialize Terraform
 
@@ -136,6 +182,8 @@ terraform init
 \`\`\`bash
 terraform plan
 \`\`\`
+
+Terraform will automatically use the values from \`terraform.tfvars\`.
 
 ### Apply the configuration
 
@@ -152,6 +200,7 @@ terraform destroy
 ## Variables
 
 See \`variables.tf\` for all available variables and their defaults.
+Edit \`terraform.tfvars\` to customize values for your deployment.
 
 Key variables:
 - \`environment\`: Environment name (default: ${data.environment})

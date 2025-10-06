@@ -61,7 +61,7 @@ describe('TerraformGenerator', () => {
     it('should generate all Terraform files including module files', async () => {
       await generateTerraformFiles(mockOptions);
 
-      expect(writeFileWithDirectory).toHaveBeenCalledTimes(7);
+      expect(writeFileWithDirectory).toHaveBeenCalledTimes(8);
       
       // Root files
       expect(writeFileWithDirectory).toHaveBeenCalledWith(
@@ -74,6 +74,10 @@ describe('TerraformGenerator', () => {
       );
       expect(writeFileWithDirectory).toHaveBeenCalledWith(
         '/fake/output/outputs.tf',
+        expect.any(String)
+      );
+      expect(writeFileWithDirectory).toHaveBeenCalledWith(
+        '/fake/output/terraform.tfvars',
         expect.any(String)
       );
       expect(writeFileWithDirectory).toHaveBeenCalledWith(
@@ -138,7 +142,7 @@ describe('TerraformGenerator', () => {
 
       await generateTerraformFiles(minimalOptions);
 
-      expect(writeFileWithDirectory).toHaveBeenCalledTimes(7);
+      expect(writeFileWithDirectory).toHaveBeenCalledTimes(8);
     });
 
     it('should generate README with correct content', async () => {
