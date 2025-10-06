@@ -117,9 +117,12 @@ This modular design allows for easy expansion in the future, such as:
 
 ## Prerequisites
 
-- Terraform >= 1.0
-- AWS CLI configured with appropriate credentials
-- AWS account with permissions to create:
+- **Terraform >= 1.0** - [Installation guide](https://developer.hashicorp.com/terraform/downloads)
+- **AWS CLI >= 2.0** - [Installation guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+  - Required for deploying built files to S3 and invalidating CloudFront cache
+  - Must be configured with credentials: \`aws configure\`
+  - If using multiple AWS accounts, set up named profiles: \`aws configure --profile my-profile\`
+- **AWS account** with permissions to create:
   - S3 buckets
   - CloudFront distributions
   - IAM policies
@@ -164,12 +167,32 @@ See [Terraform Backend Documentation](https://developer.hashicorp.com/terraform/
 
 Review and customize the \`terraform.tfvars\` file with your settings:
 - AWS region
+- AWS CLI profile (optional - see below)
 - Environment name
 - CloudFront price class
 - Custom domain settings (if applicable)
 
 This file has been pre-populated with your configuration, but you can modify any values as needed.
 Terraform will automatically load this file when you run \`plan\` or \`apply\`.
+
+#### Working with Multiple AWS Accounts
+
+If you manage multiple AWS accounts or need to use a specific AWS CLI profile, uncomment and set the \`aws_profile\` variable in \`terraform.tfvars\`:
+
+\`\`\`hcl
+aws_profile = "my-aws-profile"
+\`\`\`
+
+To set up AWS CLI profiles:
+\`\`\`bash
+# Configure a named profile
+aws configure --profile my-profile
+
+# Verify the profile works
+aws s3 ls --profile my-profile
+\`\`\`
+
+If \`aws_profile\` is not set (or set to \`null\`), Terraform will use your default AWS CLI credentials.
 
 ### Initialize Terraform
 
@@ -205,6 +228,7 @@ Edit \`terraform.tfvars\` to customize values for your deployment.
 Key variables:
 - \`environment\`: Environment name (default: ${data.environment})
 - \`aws_region\`: AWS region (default: ${data.awsRegion})
+- \`aws_profile\`: AWS CLI profile to use (default: null - uses default profile)
 - \`price_class\`: CloudFront price class (default: ${data.priceClass})
 - \`enable_versioning\`: Enable S3 versioning (default: true)
 
@@ -243,6 +267,12 @@ After infrastructure is created:
    \`\`\`bash
    aws cloudfront create-invalidation --distribution-id \${distribution_id} --paths "/*"
    \`\`\`
+
+**Note:** If you configured a specific AWS profile in Terraform, add \`--profile your-profile-name\` to the AWS CLI commands above:
+\`\`\`bash
+aws s3 sync ./${data.outputDirectory} s3://\${bucket_name}/ --delete --profile my-profile
+aws cloudfront create-invalidation --distribution-id \${distribution_id} --paths "/*" --profile my-profile
+\`\`\`
 
 ## Extending the Configuration
 

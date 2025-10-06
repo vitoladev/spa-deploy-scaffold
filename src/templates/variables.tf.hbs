@@ -12,6 +12,12 @@ variable "aws_region" {
   default     = "{{awsRegion}}"
 }
 
+variable "aws_profile" {
+  description = "AWS CLI profile to use (optional, defaults to default profile)"
+  type        = string
+  default     = null
+}
+
 variable "price_class" {
   description = "CloudFront distribution price class"
   type        = string
