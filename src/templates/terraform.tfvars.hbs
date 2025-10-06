@@ -1,0 +1,42 @@
+# Terraform Variables for {{projectName}}
+# Generated on: {{timestamp}}
+#
+# This file contains all configurable variables for your infrastructure.
+# Customize these values according to your needs.
+#
+# Terraform automatically loads this file when you run:
+#   terraform plan
+#   terraform apply
+#
+# Note: This file may contain sensitive information (like certificate ARNs).
+# Consider using .gitignore to exclude it from version control if needed.
+
+# Environment configuration
+environment = "{{environment}}"
+
+# AWS Region where resources will be created
+aws_region = "{{awsRegion}}"
+
+# CloudFront pricing tier
+# Options: PriceClass_100 (cheapest, US/Europe only)
+#          PriceClass_200 (mid-tier, adds Asia/Africa)
+#          PriceClass_All (all edge locations worldwide)
+price_class = "{{priceClass}}"
+
+# Enable S3 bucket versioning for rollback capability
+enable_versioning = true
+
+{{#if domainName}}
+# Custom domain configuration
+domain_name = "{{domainName}}"
+
+# ACM Certificate ARN (must be in us-east-1 for CloudFront)
+# You can find this in AWS Certificate Manager console
+acm_certificate_arn = "{{certificateArn}}"
+{{else}}
+# Custom domain configuration (optional)
+# Uncomment and configure these if you want to use a custom domain:
+# domain_name = "example.com"
+# acm_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/..."
+{{/if}}
+

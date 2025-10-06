@@ -38,6 +38,7 @@ export const CLIOptionsSchema = z.object({
   region: z.string().default('us-east-1'),
   domain: z.string().optional(),
   certArn: z.string().optional(),
+  githubActions: z.boolean().default(false),
   yes: z.boolean().default(false),
 });
 
