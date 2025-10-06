@@ -16,6 +16,7 @@ interface CommandOptions {
     projectName?: string;
     output?: string;
     region?: string;
+    profile?: string;
     domain?: string;
     certArn?: string;
     yes?: boolean;
@@ -36,6 +37,7 @@ program
     .option('--project-name <name>', 'Project name')
     .option('--output <path>', 'Output directory', './terraform')
     .option('--region <region>', 'AWS region', 'us-east-1')
+    .option('--profile <profile>', 'AWS CLI profile', 'default')
     .option('--domain <domain>', 'Custom domain name')
     .option('--cert-arn <arn>', 'ACM certificate ARN')
     .option('--github-actions', 'Generate GitHub Actions workflow', false)
@@ -84,6 +86,7 @@ async function generateCommand(options: CommandOptions): Promise<void> {
         projectName: options.projectName ?? packageJson.name,
         output: options.output ?? './terraform',
         region: options.region ?? 'us-east-1',
+        profile: options.profile ?? 'default',
         domain: options.domain,
         certArn: options.certArn,
     };
@@ -130,6 +133,17 @@ async function generateCommand(options: CommandOptions): Promise<void> {
             default: finalOptions.region,
         });
 
+        const profile = await input({
+            message: 'AWS CLI profile:',
+            default: finalOptions.profile,
+            validate: (value: string) => {
+                if (!value || value.trim().length === 0) {
+                    return 'AWS profile is required';
+                }
+                return true;
+            },
+        });
+
         const useDomain = await select({
             message: 'Use custom domain?',
             choices: [
@@ -173,7 +187,7 @@ async function generateCommand(options: CommandOptions): Promise<void> {
             });
         }
 
-        finalOptions = { ...finalOptions, projectName, output, region, domain, certArn };
+        finalOptions = { ...finalOptions, projectName, output, region, profile, domain, certArn };
     }
 
     const validatedOptions = CLIOptionsSchema.parse(finalOptions);
@@ -190,6 +204,7 @@ async function generateCommand(options: CommandOptions): Promise<void> {
             outputDir: outputPath,
             buildToolConfig,
             awsRegion: validatedOptions.region,
+            awsProfile: validatedOptions.profile,
             domainName: validatedOptions.domain,
             certificateArn: validatedOptions.certArn,
         })

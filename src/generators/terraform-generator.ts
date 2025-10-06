@@ -65,6 +65,7 @@ function prepareTemplateData(options: TerraformGenerationOptions): TerraformTemp
     projectName: sanitizeProjectName(options.projectName),
     environment: options.environment ?? 'production',
     awsRegion: options.awsRegion,
+    awsProfile: options.awsProfile ?? 'default',
     outputDirectory: options.buildToolConfig.outputDir,
     buildTool: options.buildToolConfig.name,
     domainName: options.domainName,

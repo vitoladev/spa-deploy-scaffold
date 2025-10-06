@@ -17,11 +17,10 @@ environment = "{{environment}}"
 # AWS Region where resources will be created
 aws_region = "{{awsRegion}}"
 
-# AWS CLI profile to use (optional)
-# Uncomment and set this if you want to use a specific AWS CLI profile
-# instead of the default profile. This is useful when working with multiple
-# AWS accounts or when you have different profiles configured.
-# aws_profile = "my-aws-profile"
+# AWS CLI profile to use
+# This is the AWS CLI profile name that Terraform will use for authentication.
+# Change this value if you want to use a different profile than "{{awsProfile}}".
+aws_profile = "{{awsProfile}}"
 
 # CloudFront pricing tier
 # Options: PriceClass_100 (cheapest, US/Europe only)

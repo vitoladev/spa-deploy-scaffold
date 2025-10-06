@@ -59,28 +59,13 @@ resource "aws_cloudfront_distribution" "spa_distribution" {
   comment             = var.comment
   default_root_object = var.default_root_object
   price_class         = var.price_class
+  aliases             = var.domain_name != null ? [var.domain_name] : []
 
-  dynamic "aliases" {
-    for_each = var.domain_name != null ? [1] : []
-    content {
-      aliases = [var.domain_name]
-    }
-  }
-
-  dynamic "viewer_certificate" {
-    for_each = var.domain_name != null ? [1] : []
-    content {
-      acm_certificate_arn      = var.acm_certificate_arn
-      ssl_support_method       = "sni-only"
-      minimum_protocol_version = "TLSv1.2_2021"
-    }
-  }
-
-  dynamic "viewer_certificate" {
-    for_each = var.domain_name == null ? [1] : []
-    content {
-      cloudfront_default_certificate = true
-    }
+  viewer_certificate {
+    acm_certificate_arn            = var.domain_name != null ? var.acm_certificate_arn : null
+    cloudfront_default_certificate = var.domain_name == null
+    ssl_support_method             = var.domain_name != null ? "sni-only" : null
+    minimum_protocol_version       = var.domain_name != null ? "TLSv1.2_2021" : "TLSv1"
   }
 
   origin {
@@ -93,23 +78,15 @@ resource "aws_cloudfront_distribution" "spa_distribution" {
   }
 
   default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "S3-${var.bucket_name}"
-
-    forwarded_values {
-      query_string = false
-
-      cookies {
-        forward = "none"
-      }
-    }
-
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "S3-${var.bucket_name}"
     viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = var.cache_min_ttl
-    default_ttl            = var.cache_default_ttl
-    max_ttl                = var.cache_max_ttl
     compress               = true
+
+    # Use managed cache policy for optimal performance
+    # CachingOptimized policy: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html
+    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"  # Managed-CachingOptimized
   }
 
   # Custom error response for SPA routing

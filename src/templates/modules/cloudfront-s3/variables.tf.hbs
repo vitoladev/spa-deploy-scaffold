@@ -46,24 +46,6 @@ variable "enable_versioning" {
   default     = true
 }
 
-variable "cache_min_ttl" {
-  description = "Minimum TTL for CloudFront cache"
-  type        = number
-  default     = 0
-}
-
-variable "cache_default_ttl" {
-  description = "Default TTL for CloudFront cache"
-  type        = number
-  default     = 3600
-}
-
-variable "cache_max_ttl" {
-  description = "Maximum TTL for CloudFront cache"
-  type        = number
-  default     = 86400
-}
-
 variable "geo_restriction_type" {
   description = "Type of geo restriction (none, whitelist, blacklist)"
   type        = string

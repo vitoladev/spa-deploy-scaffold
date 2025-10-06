@@ -2,6 +2,7 @@ export interface TerraformTemplateData {
   projectName: string;
   environment: string;
   awsRegion: string;
+  awsProfile: string;
   outputDirectory: string;
   buildTool: string;
   domainName?: string;
@@ -18,6 +19,7 @@ export interface TerraformGenerationOptions {
     outputDir: string;
   };
   awsRegion: string;
+  awsProfile?: string;
   environment?: string;
   domainName?: string;
   certificateArn?: string;

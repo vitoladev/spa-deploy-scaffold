@@ -36,6 +36,7 @@ export const CLIOptionsSchema = z.object({
   projectName: z.string().optional(),
   output: z.string().default('./terraform'),
   region: z.string().default('us-east-1'),
+  profile: z.string().default('default'),
   domain: z.string().optional(),
   certArn: z.string().optional(),
   githubActions: z.boolean().default(false),
