@@ -2,6 +2,8 @@
 
 A CLI tool that automatically generates production-ready Terraform configuration for deploying your static SPA to AWS CloudFront + S3. Just point it at your project, and it handles the rest.
 
+> **Prerequisites for deployment**: You'll need **AWS CLI** and **Terraform** installed to deploy the generated infrastructure. See [Requirements](#requirements) for details.
+
 ## Features
 
 - 🔍 **Auto-Detection**: Automatically detects your build tool and output directory
@@ -22,34 +24,53 @@ The tool automatically detects your build tool from `package.json` dependencies 
 
 ## Installation
 
-### Global Installation
+> **Note**: This package is not yet published to npm. To use it, you'll need to clone and build it locally.
+
+### Local Development Setup
 
 ```bash
-pnpm install -g static-spa-deploy-scaffold
+# Clone the repository
+git clone <repository-url>
+cd static-spa-deploy-scaffold
+
+# Enable Corepack (for pnpm)
+corepack enable
+
+# Install dependencies
+pnpm install
+
+# Build the project
+pnpm build
+
+# Link globally (optional - allows using 'spa-deploy-scaffold' command)
+pnpm link --global
 ```
 
-### Run Without Installing (Recommended)
-
+After linking, you can use it like:
 ```bash
-pnpm dlx static-spa-deploy-scaffold generate
+spa-deploy-scaffold generate
 ```
 
-or with npx:
-
+Or run directly without linking:
 ```bash
-npx static-spa-deploy-scaffold generate
+node dist/cli.js generate
 ```
 
 ## Quick Start
 
+> **Note:** This tool generates Terraform configuration. To deploy the infrastructure, you'll need **AWS CLI** and **Terraform** installed and configured (see [Requirements](#requirements)).
+
 Navigate to your SPA project and run:
 
 ```bash
-# Interactive mode (recommended)
-pnpm dlx static-spa-deploy-scaffold generate
+# If you linked it globally (after running pnpm link --global)
+spa-deploy-scaffold generate
+
+# Or run directly from the tool's directory
+node /path/to/static-spa-deploy-scaffold/dist/cli.js generate
 
 # Non-interactive mode
-pnpm dlx static-spa-deploy-scaffold generate --yes
+spa-deploy-scaffold generate --yes
 ```
 
 This will:
@@ -71,6 +92,7 @@ spa-deploy-scaffold generate [options]
 - `--project-name <name>` - Set project name (defaults to `package.json` name)
 - `--output <path>` - Terraform output directory (default: `./terraform`)
 - `--region <region>` - AWS region (default: `us-east-1`)
+- `--profile <profile>` - AWS CLI profile (default: `default`)
 - `--domain <domain>` - Custom domain name (optional)
 - `--cert-arn <arn>` - ACM certificate ARN for custom domain (optional)
 - `--yes` - Skip interactive prompts and use defaults
@@ -86,6 +108,9 @@ spa-deploy-scaffold generate --yes
 
 # Custom project name and region
 spa-deploy-scaffold generate --project-name my-app --region us-west-2
+
+# Using a specific AWS profile
+spa-deploy-scaffold generate --profile production --region eu-west-1
 
 # With custom domain
 spa-deploy-scaffold generate \
@@ -148,6 +173,10 @@ terraform/
 ```
 
 ## Deploying Your Site
+
+**Prerequisites**: Before running these commands, ensure you have:
+1. **AWS CLI** installed and configured (`aws configure`)
+2. **Terraform** installed
 
 After generating the Terraform files:
 
@@ -254,10 +283,17 @@ To use a custom domain:
 
 ## Requirements
 
+### For Running the Scaffold Tool
 - **Node.js** >= 22.0.0
 - **pnpm** >= 9.0.0 (or npm/yarn)
-- **AWS CLI** (configured with credentials)
-- **Terraform** >= 1.0.0
+
+### For Deploying Generated Infrastructure
+- **AWS CLI** >= 2.0.0 - [Installation guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+  - Required for Terraform AWS provider authentication
+  - Required for deploying built files to S3
+  - Required for CloudFront cache invalidation
+  - Must be configured with valid credentials: `aws configure`
+- **Terraform** >= 1.0.0 - [Installation guide](https://developer.hashicorp.com/terraform/downloads)
 
 ## Development
 
@@ -332,11 +368,21 @@ Or check your build config file for custom output paths.
 
 **Solution**: Configure AWS credentials:
 ```bash
+# Configure default profile
 aws configure
+
+# Or configure a named profile
+aws configure --profile production
+
 # Or set environment variables:
 export AWS_ACCESS_KEY_ID="your-key"
 export AWS_SECRET_ACCESS_KEY="your-secret"
 export AWS_DEFAULT_REGION="us-east-1"
+```
+
+If using named profiles, specify it with `--profile`:
+```bash
+spa-deploy-scaffold generate --profile production
 ```
 
 ### Permission denied on output directory
@@ -371,7 +417,7 @@ A: Costs vary, but for a typical small site:
 **Q: Can I use this in CI/CD?**  
 A: Yes! Use the `--yes` flag to skip prompts:
 ```bash
-spa-deploy-scaffold generate --yes --project-name $CI_PROJECT_NAME
+spa-deploy-scaffold generate --yes --project-name $CI_PROJECT_NAME --profile ci-deploy
 ```
 
 ## Related Projects
