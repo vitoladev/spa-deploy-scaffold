@@ -1,9 +1,9 @@
+import { BuildToolNotFoundError } from '../errors/scaffold-errors.js';
+import { detectEsbuild } from './esbuild-detector.js';
+import { detectRollup } from './rollup-detector.js';
+import { detectVite } from './vite-detector.js';
 import type { PackageJson } from '../types/config.js';
 import type { BuildToolConfig } from '../types/detector.js';
-import { BuildToolNotFoundError } from '../errors/scaffold-errors.js';
-import { detectVite } from './vite-detector.js';
-import { detectRollup } from './rollup-detector.js';
-import { detectEsbuild } from './esbuild-detector.js';
 
 export async function detectBuildTool(
   projectPath: string,

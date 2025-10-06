@@ -1,7 +1,9 @@
 import path from 'path';
-import { pathExists, readJSON, ensureDir, writeFile } from 'fs-extra';
+import fs from 'fs-extra';
 import { FileNotFoundError, ConfigParseError } from '../errors/scaffold-errors.js';
 import { PackageJsonSchema, type PackageJson } from '../types/config.js';
+
+const { pathExists, readJSON, ensureDir, writeFile } = fs;
 
 export async function readPackageJson(projectPath: string): Promise<PackageJson> {
   const packageJsonPath = path.join(projectPath, 'package.json');
@@ -11,7 +13,7 @@ export async function readPackageJson(projectPath: string): Promise<PackageJson>
   }
 
   try {
-    const data = await readJSON(packageJsonPath);
+    const data: unknown = await readJSON(packageJsonPath);
     const result = PackageJsonSchema.safeParse(data);
 
     if (!result.success) {

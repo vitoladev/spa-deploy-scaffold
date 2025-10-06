@@ -2,32 +2,37 @@
 
 output "s3_bucket_name" {
   description = "Name of the S3 bucket"
-  value       = aws_s3_bucket.spa_bucket.id
+  value       = module.frontend.s3_bucket_id
 }
 
 output "s3_bucket_arn" {
   description = "ARN of the S3 bucket"
-  value       = aws_s3_bucket.spa_bucket.arn
+  value       = module.frontend.s3_bucket_arn
 }
 
 output "s3_bucket_regional_domain_name" {
   description = "Regional domain name of the S3 bucket"
-  value       = aws_s3_bucket.spa_bucket.bucket_regional_domain_name
+  value       = module.frontend.s3_bucket_regional_domain_name
 }
 
 output "cloudfront_distribution_id" {
   description = "ID of the CloudFront distribution"
-  value       = aws_cloudfront_distribution.spa_distribution.id
+  value       = module.frontend.cloudfront_distribution_id
+}
+
+output "cloudfront_distribution_arn" {
+  description = "ARN of the CloudFront distribution"
+  value       = module.frontend.cloudfront_distribution_arn
 }
 
 output "cloudfront_domain_name" {
   description = "Domain name of the CloudFront distribution"
-  value       = aws_cloudfront_distribution.spa_distribution.domain_name
+  value       = module.frontend.cloudfront_domain_name
 }
 
 output "cloudfront_hosted_zone_id" {
   description = "CloudFront Route 53 zone ID"
-  value       = aws_cloudfront_distribution.spa_distribution.hosted_zone_id
+  value       = module.frontend.cloudfront_hosted_zone_id
 }
 
 {{#if domainName}}
@@ -39,10 +44,10 @@ output "custom_domain_name" {
 
 output "deployment_command" {
   description = "Command to deploy built files to S3"
-  value       = "aws s3 sync ./{{outputDirectory}} s3://${aws_s3_bucket.spa_bucket.id}/ --delete"
+  value       = "aws s3 sync ./{{outputDirectory}} s3://${module.frontend.s3_bucket_id}/ --delete"
 }
 
 output "cache_invalidation_command" {
   description = "Command to invalidate CloudFront cache"
-  value       = "aws cloudfront create-invalidation --distribution-id ${aws_cloudfront_distribution.spa_distribution.id} --paths '/*'"
+  value       = "aws cloudfront create-invalidation --distribution-id ${module.frontend.cloudfront_distribution_id} --paths '/*'"
 }

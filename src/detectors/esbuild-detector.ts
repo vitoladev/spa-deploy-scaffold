@@ -1,9 +1,9 @@
 import path from 'path';
-import type { PackageJson } from '../types/config.js';
-import type { BuildToolConfig } from '../types/detector.js';
+import { logger } from '../utils/cli-logger.js';
 import { findConfigFile } from '../utils/file-system-helpers.js';
 import { isEsbuildConfig } from '../utils/validation-helpers.js';
-import { logger } from '../utils/cli-logger.js';
+import type { PackageJson } from '../types/config.js';
+import type { BuildToolConfig } from '../types/detector.js';
 
 const DEFAULT_OUTPUT_DIR = 'dist';
 
@@ -45,8 +45,8 @@ export async function detectEsbuild(
 
 async function parseEsbuildConfig(configPath: string): Promise<string | null> {
   try {
-    const configModule = await import(configPath);
-    const config: unknown = configModule.default ?? configModule;
+    const configModule: unknown = await import(configPath);
+    const config: unknown = (configModule as { default?: unknown }).default ?? configModule;
 
     if (isEsbuildConfig(config)) {
       return config.outdir ?? extractDirectoryFromFilePath(config.outfile);
@@ -54,7 +54,8 @@ async function parseEsbuildConfig(configPath: string): Promise<string | null> {
 
     return null;
   } catch (error) {
-    logger.debug(`Failed to parse esbuild config: ${error}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.debug(`Failed to parse esbuild config: ${errorMessage}`);
     return null;
   }
 }

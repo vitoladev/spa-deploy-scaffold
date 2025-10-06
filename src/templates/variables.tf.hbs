@@ -23,6 +23,12 @@ variable "price_class" {
   }
 }
 
+variable "enable_versioning" {
+  description = "Enable S3 bucket versioning"
+  type        = bool
+  default     = true
+}
+
 {{#if domainName}}
 variable "domain_name" {
   description = "Custom domain name for the CloudFront distribution"

@@ -22,4 +22,5 @@ export interface TerraformGenerationOptions {
   domainName?: string;
   certificateArn?: string;
   priceClass?: string;
+  templatesDir?: string; // Optional: for testing or custom template locations
 }

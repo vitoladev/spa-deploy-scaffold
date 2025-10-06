@@ -1,0 +1,138 @@
+# CloudFront + S3 Module for Static SPA Hosting
+# This module creates an S3 bucket and CloudFront distribution for hosting a static SPA
+
+# S3 Bucket for static content
+resource "aws_s3_bucket" "spa_bucket" {
+  bucket = var.bucket_name
+
+  tags = var.tags
+}
+
+# Block all public access to S3
+resource "aws_s3_bucket_public_access_block" "spa_bucket" {
+  bucket = aws_s3_bucket.spa_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Enable versioning (optional but recommended)
+resource "aws_s3_bucket_versioning" "spa_bucket" {
+  bucket = aws_s3_bucket.spa_bucket.id
+  
+  versioning_configuration {
+    status = var.enable_versioning ? "Enabled" : "Disabled"
+  }
+}
+
+# CloudFront Origin Access Identity
+resource "aws_cloudfront_origin_access_identity" "spa_oai" {
+  comment = "OAI for ${var.bucket_name}"
+}
+
+# S3 Bucket Policy - Allow CloudFront access only
+resource "aws_s3_bucket_policy" "spa_bucket" {
+  bucket = aws_s3_bucket.spa_bucket.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AllowCloudFrontAccess"
+        Effect    = "Allow"
+        Principal = {
+          AWS = aws_cloudfront_origin_access_identity.spa_oai.iam_arn
+        }
+        Action   = "s3:GetObject"
+        Resource = "${aws_s3_bucket.spa_bucket.arn}/*"
+      }
+    ]
+  })
+}
+
+# CloudFront Distribution
+resource "aws_cloudfront_distribution" "spa_distribution" {
+  enabled             = true
+  is_ipv6_enabled     = true
+  comment             = var.comment
+  default_root_object = var.default_root_object
+  price_class         = var.price_class
+
+  dynamic "aliases" {
+    for_each = var.domain_name != null ? [1] : []
+    content {
+      aliases = [var.domain_name]
+    }
+  }
+
+  dynamic "viewer_certificate" {
+    for_each = var.domain_name != null ? [1] : []
+    content {
+      acm_certificate_arn      = var.acm_certificate_arn
+      ssl_support_method       = "sni-only"
+      minimum_protocol_version = "TLSv1.2_2021"
+    }
+  }
+
+  dynamic "viewer_certificate" {
+    for_each = var.domain_name == null ? [1] : []
+    content {
+      cloudfront_default_certificate = true
+    }
+  }
+
+  origin {
+    domain_name = aws_s3_bucket.spa_bucket.bucket_regional_domain_name
+    origin_id   = "S3-${var.bucket_name}"
+
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.spa_oai.cloudfront_access_identity_path
+    }
+  }
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-${var.bucket_name}"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = var.cache_min_ttl
+    default_ttl            = var.cache_default_ttl
+    max_ttl                = var.cache_max_ttl
+    compress               = true
+  }
+
+  # Custom error response for SPA routing
+  # Redirect 404 and 403 errors to index.html for client-side routing
+  custom_error_response {
+    error_code         = 404
+    response_code      = 200
+    response_page_path = "/index.html"
+  }
+
+  custom_error_response {
+    error_code         = 403
+    response_code      = 200
+    response_page_path = "/index.html"
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = var.geo_restriction_type
+      locations        = var.geo_restriction_locations
+    }
+  }
+
+  tags = var.tags
+}
+

@@ -1,0 +1,10 @@
+{
+  "name": "test-rollup-project",
+  "version": "1.0.0",
+  "devDependencies": {
+    "rollup": "^3.29.0"
+  },
+  "scripts": {
+    "build": "rollup -c"
+  }
+}

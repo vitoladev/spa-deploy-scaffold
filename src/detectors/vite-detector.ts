@@ -1,8 +1,8 @@
-import type { PackageJson } from '../types/config.js';
-import type { BuildToolConfig } from '../types/detector.js';
+import { logger } from '../utils/cli-logger.js';
 import { findConfigFile } from '../utils/file-system-helpers.js';
 import { isViteConfig } from '../utils/validation-helpers.js';
-import { logger } from '../utils/cli-logger.js';
+import type { PackageJson } from '../types/config.js';
+import type { BuildToolConfig } from '../types/detector.js';
 
 const DEFAULT_OUTPUT_DIR = 'dist';
 
@@ -42,8 +42,8 @@ export async function detectVite(
 
 async function parseViteConfig(configPath: string): Promise<string | null> {
   try {
-    const configModule = await import(configPath);
-    const config: unknown = configModule.default ?? configModule;
+    const configModule: unknown = await import(configPath);
+    const config: unknown = (configModule as { default?: unknown }).default ?? configModule;
 
     if (isViteConfig(config)) {
       return config.build?.outDir ?? null;
@@ -51,7 +51,8 @@ async function parseViteConfig(configPath: string): Promise<string | null> {
 
     return null;
   } catch (error) {
-    logger.debug(`Failed to parse Vite config: ${error}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.debug(`Failed to parse Vite config: ${errorMessage}`);
     return null;
   }
 }

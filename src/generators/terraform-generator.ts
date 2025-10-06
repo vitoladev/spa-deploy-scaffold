@@ -1,26 +1,62 @@
 import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs-extra';
 import Handlebars from 'handlebars';
-import { readFile } from 'fs-extra';
-import type { TerraformGenerationOptions, TerraformTemplateData } from '../types/terraform.js';
+import { logger } from '../utils/cli-logger.js';
 import { writeFileWithDirectory } from '../utils/file-system-helpers.js';
 import { sanitizeProjectName } from '../utils/validation-helpers.js';
-import { logger } from '../utils/cli-logger.js';
+import type { TerraformGenerationOptions, TerraformTemplateData } from '../types/terraform.js';
+
+const { readFile } = fs;
+
+// Helper function that can be mocked in tests
+export function getDefaultTemplatesDir(): string {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  return path.join(currentDir, '../templates');
+}
 
 export async function generateTerraformFiles(
   options: TerraformGenerationOptions
 ): Promise<void> {
+  const templatesDir = options.templatesDir ?? getDefaultTemplatesDir();
   const templateData = prepareTemplateData(options);
 
   logger.debug(`Generating Terraform files to: ${options.outputDir}`);
 
+  const modulesDir = path.join(options.outputDir, 'modules', 'cloudfront-s3');
+
   await Promise.all([
-    generateFile('main.tf.hbs', 'main.tf', templateData, options.outputDir),
-    generateFile('variables.tf.hbs', 'variables.tf', templateData, options.outputDir),
-    generateFile('outputs.tf.hbs', 'outputs.tf', templateData, options.outputDir),
+    // Root Terraform files
+    generateFile('main.tf.hbs', 'main.tf', templateData, options.outputDir, templatesDir),
+    generateFile('variables.tf.hbs', 'variables.tf', templateData, options.outputDir, templatesDir),
+    generateFile('outputs.tf.hbs', 'outputs.tf', templateData, options.outputDir, templatesDir),
     generateReadme(templateData, options.outputDir),
+    
+    // CloudFront + S3 Module files
+    generateFile(
+      'modules/cloudfront-s3/main.tf.hbs',
+      'main.tf',
+      templateData,
+      modulesDir,
+      templatesDir
+    ),
+    generateFile(
+      'modules/cloudfront-s3/variables.tf.hbs',
+      'variables.tf',
+      templateData,
+      modulesDir,
+      templatesDir
+    ),
+    generateFile(
+      'modules/cloudfront-s3/outputs.tf.hbs',
+      'outputs.tf',
+      templateData,
+      modulesDir,
+      templatesDir
+    ),
   ]);
 
-  logger.success('Terraform files generated successfully!');
+  logger.debug('All Terraform files generated');
 }
 
 function prepareTemplateData(options: TerraformGenerationOptions): TerraformTemplateData {
@@ -41,9 +77,10 @@ async function generateFile(
   templateName: string,
   outputName: string,
   data: TerraformTemplateData,
-  outputDir: string
+  outputDir: string,
+  templatesDir: string
 ): Promise<void> {
-  const templatePath = path.join(__dirname, '../templates', templateName);
+  const templatePath = path.join(templatesDir, templateName);
   const outputPath = path.join(outputDir, outputName);
 
   const templateContent = await readFile(templatePath, 'utf-8');
@@ -63,6 +100,19 @@ async function generateReadme(
 Generated on: ${data.timestamp}
 Build Tool: ${data.buildTool}
 Output Directory: ${data.outputDirectory}
+
+## Architecture
+
+This configuration uses a modular structure:
+
+- **Root Module**: Orchestrates all infrastructure components
+- **CloudFront + S3 Module** (\`modules/cloudfront-s3\`): Manages static site hosting with CloudFront CDN and S3 storage
+
+This modular design allows for easy expansion in the future, such as:
+- Adding backend services (ECS, Lambda, etc.)
+- Integrating WAF for security
+- Adding custom CloudWatch alarms
+- Setting up CI/CD pipelines
 
 ## Prerequisites
 
@@ -103,15 +153,30 @@ terraform destroy
 
 See \`variables.tf\` for all available variables and their defaults.
 
+Key variables:
+- \`environment\`: Environment name (default: ${data.environment})
+- \`aws_region\`: AWS region (default: ${data.awsRegion})
+- \`price_class\`: CloudFront price class (default: ${data.priceClass})
+- \`enable_versioning\`: Enable S3 versioning (default: true)
+
+## Modules
+
+### CloudFront + S3 Module
+
+Located in \`modules/cloudfront-s3/\`, this module creates:
+- S3 bucket with versioning and private access
+- CloudFront distribution with Origin Access Identity
+- Bucket policy allowing CloudFront access only
+- Custom error responses for SPA routing
+
 ## Outputs
 
 After applying, Terraform will output:
-- S3 bucket name
-- S3 bucket ARN
-- CloudFront distribution ID
-- CloudFront domain name
+- S3 bucket name and ARN
+- CloudFront distribution ID and domain name
+- Deployment commands (copy/paste ready!)
 
-## Deployment
+## Deployment Workflow
 
 After infrastructure is created:
 
@@ -120,15 +185,33 @@ After infrastructure is created:
    npm run build
    \`\`\`
 
-2. Sync to S3:
+2. Deploy to S3 (use the \`deployment_command\` output):
    \`\`\`bash
    aws s3 sync ./${data.outputDirectory} s3://\${bucket_name}/ --delete
    \`\`\`
 
-3. Invalidate CloudFront cache:
+3. Invalidate CloudFront cache (use the \`cache_invalidation_command\` output):
    \`\`\`bash
    aws cloudfront create-invalidation --distribution-id \${distribution_id} --paths "/*"
    \`\`\`
+
+## Extending the Configuration
+
+To add more infrastructure (e.g., backend services, WAF):
+
+1. Create a new module in \`modules/\`
+2. Add module call in \`main.tf\`
+3. Add required variables in \`variables.tf\`
+4. Expose outputs in \`outputs.tf\`
+
+Example:
+\`\`\`hcl
+module "backend" {
+  source = "./modules/ecs-backend"
+  
+  # ... configuration
+}
+\`\`\`
 `;
 
   const readmePath = path.join(outputDir, 'README.md');
